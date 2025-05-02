@@ -11,7 +11,7 @@ const map = L.map('map', {
 
 // エリア定義
 const areas = {
-  mondstadt: { url: 'images/mondstadt.png', width: 2765, height: 3878, subAreas: {} },
+  mondstadt: { url: 'images/mondstadt.png', width: 3878, height: 2765, subAreas: {} },
   liyue: { 
     url: 'images/liyue.png', 
     width: 4169, 
