@@ -14,35 +14,35 @@ const areas = {
   mondstadt: { url: 'images/mondstadt.png', width: 3878, height: 2765, subAreas: {} },
   liyue: { 
     url: 'images/liyue.png', 
-    width: 4169, 
-    height: 4571, 
+    width: 4571, 
+    height: 4169,
     subAreas: { 
-      sougan: { url: 'images/natlan_P0.png', width: 1677, height: 1893 } 
+      sougan: { url: 'images/natlan_P0.png', width: 1893, height: 1677 } 
     } 
   },
   inazuma: { 
     url: 'images/inazuma1_P0.png', 
-    width: 5568, 
-    height: 6018, 
+    width: 6018, 
+    height: 5568, 
     subAreas: { 
-      enkonomiya: { url: 'images/inazuma_P0.png', width: 3018, height: 3171 } 
+      enkonomiya: { url: 'images/inazuma_P0.png', width: 3171, height: 3018 }
     } 
   },
   sumeru: { url: 'images/sumeru_P0_highres.png', width: 5578, height: 5543, subAreas: {} },
   fontaine: { 
     url: 'images/fontaine_map.png', 
-    width: 4356, 
-    height: 3175, 
+    width: 3175, 
+    height: 4356, 
     subAreas: { 
-      ancientSea: { url: 'images/map34_P0.png', width: 1014, height: 1998 } 
+      ancientSea: { url: 'images/map34_P0.png', width: 1998, height: 1014 } 
     } 
   },
   natlan: { 
     url: 'images/natlan_N1.png', 
-    width: 5896, 
-    height: 5432, 
+    width: 5432, 
+    height: 5896, 
     subAreas: { 
-      ancientMountain: { url: 'images/map36_P0.png', width: 3117, height: 2634 } 
+      ancientMountain: { url: 'images/map36_P0.png', width: 2634, height: 3117 } 
     } 
   }
 };
@@ -105,17 +105,23 @@ function loadMap(area, subArea = null) {
   }
   console.log('Loading map:', areaData.url, 'Dimensions:', areaData.width, 'x', areaData.height);
   const bounds = [[0, 0], [areaData.height, areaData.width]];
-  
-  if (currentOverlay) {
-    map.removeLayer(currentOverlay);
-    console.log('Removed previous overlay');
-  }
-  
+
+  // 既存のレイヤーをすべてクリア
+  map.eachLayer(layer => {
+    if (layer instanceof L.ImageOverlay || layer instanceof L.Marker) {
+      map.removeLayer(layer);
+      console.log('Removed layer:', layer);
+    }
+  });
+  currentOverlay = null;
+
+  // 新しいマップ画像を追加
   currentOverlay = L.imageOverlay(areaData.url, bounds)
     .on('error', () => console.error('Failed to load map image:', areaData.url))
     .on('load', () => console.log('Map image loaded successfully:', areaData.url))
     .addTo(map);
-  
+  console.log('Added new overlay:', areaData.url);
+
   try {
     map.fitBounds(bounds);
     map.setMaxBounds(bounds);
@@ -123,7 +129,8 @@ function loadMap(area, subArea = null) {
   } catch (err) {
     console.error('Error setting map bounds:', err);
   }
-  
+
+  // ピンを再描画
   refreshMap();
   updateCounts();
   updateSealCounts();
@@ -165,7 +172,10 @@ $('#subAreaSelect').on('change', function () {
 
 // ピンのマップ表示
 function addPinToMap(pin, index) {
-  if (pin.area !== currentArea || (pin.subArea && pin.subArea !== currentSubArea) || (!pin.subArea && currentSubArea)) return;
+  if (pin.area !== currentArea || (pin.subArea && pin.subArea !== currentSubArea) || (!pin.subArea && currentSubArea)) {
+    console.log('Skipping pin due to area mismatch:', pin);
+    return;
+  }
   console.log('Adding pin:', pin);
   const icon = pinIcons[pin.icon];
   if (!icon) {
@@ -194,6 +204,7 @@ function addPinToMap(pin, index) {
       </div>
     `)
     .on('add', () => {
+      console.log('Pin added to map:', pin);
       const img = new Image();
       img.src = icon.url;
       img.onerror = () => console.error(`Failed to load pin icon: ${icon.url}`);
@@ -217,6 +228,7 @@ function addPinToMap(pin, index) {
         className: 'badge-container'
       })
     }).addTo(map);
+    console.log('Badges added to map');
   }
 }
 
@@ -363,10 +375,17 @@ function deletePin(index) {
 // マップのリフレッシュ
 function refreshMap() {
   console.log('refreshMap called');
+  // マーカーとバッジのみクリア（マップ画像は保持）
   map.eachLayer(layer => {
-    if (layer instanceof L.Marker) map.removeLayer(layer);
+    if (layer instanceof L.Marker) {
+      map.removeLayer(layer);
+      console.log('Removed marker layer:', layer);
+    }
   });
-  pins.forEach((pin, index) => addPinToMap(pin, index));
+  // ピンを再描画
+  pins.forEach((pin, index) => {
+    addPinToMap(pin, index);
+  });
   console.log('Map refreshed, pins added:', pins.length);
 }
 
@@ -416,7 +435,7 @@ function updateCounts() {
   document.getElementById('countSenrei').textContent = counts['仙霊'];
   document.getElementById('countSekihi').textContent = counts['元素石碑'];
   document.getElementById('countSquare').textContent = counts['立方体'];
-  document.getElementById('countLYPins').textContent = counts['鍵紋1'];
+  document.getElementById('countKey1').textContent = counts['鍵紋1'];
   document.getElementById('countKey2').textContent = counts['鍵紋2'];
   document.getElementById('countKey3').textContent = counts['鍵紋3'];
   document.getElementById('countKey4').textContent = counts['鍵紋4'];
