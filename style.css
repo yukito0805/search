@@ -6,7 +6,7 @@ body {
 
 /* マップ */
 #map {
-  height: 60vh;
+  height: 90vh;
   width: 100%;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -132,7 +132,7 @@ body {
 /* モバイル対応（iPad含む） */
 @media (max-width: 768px) {
   #map {
-    height: 50vh;
+    height: 70vh;
   }
   #areaSelect, #subAreaSelect {
     max-width: 100%;
