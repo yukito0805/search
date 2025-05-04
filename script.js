@@ -93,6 +93,12 @@ const chestSeals = {
 
 // ピンデータ
 let pins = JSON.parse(localStorage.getItem('pins') || '[]');
+// 既存ピンの obtained を true に設定
+pins = pins.map(pin => ({
+  ...pin,
+  obtained: pin.obtained !== undefined ? pin.obtained : true
+}));
+localStorage.setItem('pins', JSON.stringify(pins));
 let editingIndex = null;
 
 // マップの表示
@@ -170,6 +176,21 @@ $('#subAreaSelect').on('change', function () {
   loadMap(currentArea, currentSubArea);
 });
 
+// 取得済み状態の切り替え
+function toggleObtained(index) {
+  console.log('toggleObtained called:', { index });
+  try {
+    pins[index].obtained = !pins[index].obtained;
+    localStorage.setItem('pins', JSON.stringify(pins));
+    refreshMap();
+    updateCounts();
+    updateSealCounts();
+    console.log('Obtained state toggled:', pins[index]);
+  } catch (err) {
+    console.error('Error toggling obtained state:', err);
+  }
+}
+
 // ピンのマップ表示
 function addPinToMap(pin, index) {
   if (pin.area !== currentArea || (pin.subArea && pin.subArea !== currentSubArea) || (!pin.subArea && currentSubArea)) {
@@ -183,24 +204,30 @@ function addPinToMap(pin, index) {
     return;
   }
 
-  // ピンのアイコン（背景なし）
+  // ピンのアイコン（背景なし、取得状態に応じてカラー/グレー）
   const marker = L.marker([pin.lat, pin.lng], {
     icon: L.icon({
       iconUrl: icon.url,
       iconSize: icon.size,
       iconAnchor: icon.anchor,
-      popupAnchor: [0, -icon.anchor[1]]
+      popupAnchor: [0, -icon.anchor[1]],
+      className: pin.obtained ? '' : 'grayscale' // 取得済み: カラー, 未取得: グレー
     })
   })
     .addTo(map)
     .bindPopup(`
       <strong>${pin.icon}${getFlagText(pin)}</strong><br>
+      <p>取得済み: ${pin.obtained ? 'はい' : 'いいえ'}</p>
       ${pin.note ? `<p>備考: ${pin.note}</p>` : ''}
       ${pin.image ? `<img src="${pin.image}" style="max-width: 200px;">` : ''}
       ${pin.video ? `<iframe width="200" height="150" src="${pin.video.replace('watch?v=', 'embed/')}"></iframe>` : ''}
-      <div class="mt-2">
+      <div class="mt-2 d-flex align-items-center gap-2">
         <button class="btn btn-sm btn-primary" onclick="editPin(${index})">編集</button>
         <button class="btn btn-sm btn-danger" onclick="deletePin(${index})">削除</button>
+        <div class="form-check form-check-inline">
+          <input class="form-check-input obtained-checkbox" type="checkbox" id="obtained-${index}" ${pin.obtained ? 'checked' : ''} onchange="toggleObtained(${index})">
+          <label class="form-check-label" for="obtained-${index}">取得済み</label>
+        </div>
       </div>
     `)
     .on('add', () => {
@@ -253,6 +280,7 @@ function openPinModal(e) {
   $('#seelie').prop('checked', false);
   $('#electroSeelie').prop('checked', false);
   $('#challenge').prop('checked', false);
+  $('#obtained').prop('checked', false); // 新規ピンは未取得
   $('#imagePreview').hide();
   $('#videoPreview').hide();
   $('.icon-option').removeClass('selected');
@@ -298,7 +326,8 @@ function savePin() {
     underground: $('#underground').prop('checked'),
     seelie: $('#seelie').prop('checked'),
     electroSeelie: $('#electroSeelie').prop('checked'),
-    challenge: $('#challenge').prop('checked')
+    challenge: $('#challenge').prop('checked'),
+    obtained: $('#obtained').prop('checked') // 取得済み状態
   };
   console.log('Saving pin:', pin);
 
@@ -345,6 +374,7 @@ function editPin(index) {
   $('#seelie').prop('checked', pin.seelie || false);
   $('#electroSeelie').prop('checked', pin.electroSeelie || false);
   $('#challenge').prop('checked', pin.challenge || false);
+  $('#obtained').prop('checked', pin.obtained || false); // 取得状態を反映
   $('.icon-option').removeClass('selected');
   $(`.icon-option[data-icon="${pin.icon}"]`).addClass('selected');
   window.tempCoords = { lat: pin.lat, lng: pin.lng };
