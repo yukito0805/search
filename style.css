@@ -6,14 +6,10 @@ body {
 
 /* マップ */
 #map {
-  height: 90vh;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  margin-right: calc(-50vw + 50%);
+  height: 60vh;
+  width: 100%;
   border: 1px solid #ccc;
   border-radius: 5px;
-  position: relative;
-  z-index: 0; /* ナビゲーションやモーダルとの重なり調整 */
 }
 
 /* カウントカード */
@@ -83,6 +79,15 @@ body {
   font-size: 0.9rem;
 }
 
+/* ポップアップのチェックボックス */
+.form-check-inline {
+  margin-right: 10px;
+  margin-bottom: 0;
+}
+.form-check-inline .form-check-input {
+  margin-top: 0;
+}
+
 /* ピンのバッジ */
 .pin-badge {
   display: inline-block;
@@ -133,10 +138,15 @@ body {
   background: none !important; /* 背景を透明に */
 }
 
+/* グレースケールアイコン */
+.leaflet-marker-icon.grayscale {
+  filter: grayscale(100%);
+}
+
 /* モバイル対応（iPad含む） */
 @media (max-width: 768px) {
   #map {
-    height: 70vh;
+    height: 50vh;
   }
   #areaSelect, #subAreaSelect {
     max-width: 100%;
