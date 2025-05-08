@@ -101,6 +101,40 @@ pins = pins.map(pin => ({
 localStorage.setItem('pins', JSON.stringify(pins));
 let editingIndex = null;
 
+// ピンの表示状態
+let visiblePins = JSON.parse(localStorage.getItem('visiblePins') || '{}');
+// デフォルトで全ピンを表示
+const defaultVisiblePins = {
+  '風神瞳': true,
+  '岩神瞳': true,
+  '雷神瞳': true,
+  '草神瞳': true,
+  '水神瞳': true,
+  '炎神瞳': true,
+  'チャレンジ': true,
+  '仙霊': true,
+  '元素石碑': true,
+  '立方体': true,
+  '鍵紋1': true,
+  '鍵紋2': true,
+  '鍵紋3': true,
+  '鍵紋4': true,
+  '鍵紋5': true,
+  '雷霊': true,
+  'アランナラ': true,
+  'スメールギミック': true,
+  'リーフコア': true,
+  '短火装置': true,
+  '死域': true,
+  '普通の宝箱': true,
+  '精巧な宝箱': true,
+  '貴重な宝箱': true,
+  '豪華な宝箱': true,
+  '珍奇な宝箱': true
+};
+visiblePins = { ...defaultVisiblePins, ...visiblePins };
+localStorage.setItem('visiblePins', JSON.stringify(visiblePins));
+
 // マップの表示
 function loadMap(area, subArea = null) {
   console.log('loadMap called:', { area, subArea });
@@ -191,10 +225,27 @@ function toggleObtained(index) {
   }
 }
 
+// ピンの表示状態の切り替え
+function togglePinVisibility(icon) {
+  console.log('togglePinVisibility called:', { icon });
+  try {
+    visiblePins[icon] = !visiblePins[icon];
+    localStorage.setItem('visiblePins', JSON.stringify(visiblePins));
+    refreshMap();
+    console.log('Pin visibility toggled:', { icon, visible: visiblePins[icon] });
+  } catch (err) {
+    console.error('Error toggling pin visibility:', err);
+  }
+}
+
 // ピンのマップ表示
 function addPinToMap(pin, index) {
   if (pin.area !== currentArea || (pin.subArea && pin.subArea !== currentSubArea) || (!pin.subArea && currentSubArea)) {
     console.log('Skipping pin due to area mismatch:', pin);
+    return;
+  }
+  if (!visiblePins[pin.icon]) {
+    console.log('Skipping pin due to visibility:', pin);
     return;
   }
   console.log('Adding pin:', pin);
@@ -419,7 +470,7 @@ function refreshMap() {
   console.log('Map refreshed, pins added:', pins.length);
 }
 
-// ピンのカウント更新
+// ピンのカウント更新（取得済みのみ）
 function updateCounts() {
   console.log('updateCounts called');
   const counts = {
@@ -451,7 +502,11 @@ function updateCounts() {
     '珍奇な宝箱': 0
   };
   pins.forEach(pin => {
-    if (pin.area === currentArea && (!pin.subArea && !currentSubArea || pin.subArea === currentSubArea)) {
+    if (
+      pin.area === currentArea &&
+      (!pin.subArea && !currentSubArea || pin.subArea === currentSubArea) &&
+      pin.obtained === true // 取得済みのみカウント
+    ) {
       if (counts[pin.icon] !== undefined) counts[pin.icon]++;
     }
   });
@@ -484,7 +539,7 @@ function updateCounts() {
   console.log('Counts updated:', counts);
 }
 
-// 印のカウント更新
+// 印のカウント更新（取得済みの宝箱のみ）
 function updateSealCounts() {
   console.log('updateSealCounts called');
   const seals = {
@@ -496,7 +551,7 @@ function updateSealCounts() {
     natlan: 0
   };
   pins.forEach(pin => {
-    if (chestSeals[pin.icon] !== undefined) {
+    if (chestSeals[pin.icon] !== undefined && pin.obtained === true) {
       seals[pin.area] += chestSeals[pin.icon];
     }
   });
@@ -589,9 +644,23 @@ $('#importTrigger').on('click', function () {
   reader.readAsText(file);
 });
 
+// ピンの表示状態を初期化
+function initializePinVisibility() {
+  console.log('initializePinVisibility called');
+  $('.pin-visibility').each(function () {
+    const icon = $(this).data('icon');
+    $(this).prop('checked', visiblePins[icon]);
+  });
+  $('.pin-visibility').on('change', function () {
+    const icon = $(this).data('icon');
+    togglePinVisibility(icon);
+  });
+}
+
 // 初期ピンの読み込み
 pins.forEach((pin, index) => addPinToMap(pin, index));
 
-// 初期カウント
+// 初期カウントと表示状態
 updateCounts();
 updateSealCounts();
+initializePinVisibility();
