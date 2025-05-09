@@ -91,24 +91,52 @@ const chestSeals = {
   '珍奇な宝箱': 0
 };
 
-// ピンデータとラインデータ
+// ピンデータ
 let pins = JSON.parse(localStorage.getItem('pins') || '[]');
-// 既存ピンの obtained と lowRoad を初期化
+// 既存ピンの obtained を true に設定
 pins = pins.map(pin => ({
   ...pin,
-  obtained: pin.obtained !== undefined ? pin.obtained : true,
-  lowRoad: pin.lowRoad !== undefined ? pin.lowRoad : false
+  obtained: pin.obtained !== undefined ? pin.obtained : true
 }));
 localStorage.setItem('pins', JSON.stringify(pins));
-let lines = JSON.parse(localStorage.getItem('lines') || '[]');
 let editingIndex = null;
-let connectingPinIndex = null; // 線接続中のピンのインデックス
 
-// 表示フィルターの状態
-let filters = {
-  normalChest: true,
-  pupils: true
+// ピンの表示/非表示状態
+let pinVisibility = JSON.parse(localStorage.getItem('pinVisibility') || '{}');
+const defaultVisibility = {
+  '風神瞳': true,
+  '岩神瞳': true,
+  '雷神瞳': true,
+  '草神瞳': true,
+  '水神瞳': true,
+  '炎神瞳': true,
+  'チャレンジ': true,
+  '仙霊': true,
+  '元素石碑': true,
+  '立方体': true,
+  '鍵紋1': true,
+  '鍵紋2': true,
+  '鍵紋3': true,
+  '鍵紋4': true,
+  '鍵紋5': true,
+  '雷霊': true,
+  'アランナラ': true,
+  'スメールギミック': true,
+  'リーフコア': true,
+  '短火装置': true,
+  '死域': true,
+  '普通の宝箱': true,
+  '精巧な宝箱': true,
+  '貴重な宝箱': true,
+  '豪華な宝箱': true,
+  '珍奇な宝箱': true
 };
+Object.keys(defaultVisibility).forEach(key => {
+  if (pinVisibility[key] === undefined) {
+    pinVisibility[key] = defaultVisibility[key];
+  }
+});
+localStorage.setItem('pinVisibility', JSON.stringify(pinVisibility));
 
 // マップの表示
 function loadMap(area, subArea = null) {
@@ -123,7 +151,7 @@ function loadMap(area, subArea = null) {
 
   // 既存のレイヤーをすべてクリア
   map.eachLayer(layer => {
-    if (layer instanceof L.ImageOverlay || layer instanceof L.Marker || layer instanceof L.Polyline) {
+    if (layer instanceof L.ImageOverlay || layer instanceof L.Marker) {
       map.removeLayer(layer);
       console.log('Removed layer:', layer);
     }
@@ -132,10 +160,7 @@ function loadMap(area, subArea = null) {
 
   // 新しいマップ画像を追加
   currentOverlay = L.imageOverlay(areaData.url, bounds)
-    .on('error', () => {
-      console.error('Failed to load map image:', areaData.url);
-      alert('マップ画像の読み込みに失敗しました。画像パスを確認してください。');
-    })
+    .on('error', () => console.error('Failed to load map image:', areaData.url))
     .on('load', () => console.log('Map image loaded successfully:', areaData.url))
     .addTo(map);
   console.log('Added new overlay:', areaData.url);
@@ -146,10 +171,9 @@ function loadMap(area, subArea = null) {
     console.log('Map bounds set:', bounds);
   } catch (err) {
     console.error('Error setting map bounds:', err);
-    alert('マップの設定に失敗しました。コンソールを確認してください。');
   }
 
-  // ピンと線を再描画
+  // ピンを再描画
   refreshMap();
   updateCounts();
   updateSealCounts();
@@ -161,7 +185,6 @@ try {
   console.log('Initial map loaded');
 } catch (err) {
   console.error('Error loading initial map:', err);
-  alert('初期マップの読み込みに失敗しました。コンソールを確認してください。');
 }
 
 // エリア選択
@@ -190,17 +213,20 @@ $('#subAreaSelect').on('change', function () {
   loadMap(currentArea, currentSubArea);
 });
 
-// 表示フィルターの変更
-$('#filterNormalChest').on('change', function () {
-  filters.normalChest = $(this).prop('checked');
-  console.log('Filter normalChest changed:', filters.normalChest);
+// ピンの表示/非表示切り替え
+$('.pin-visibility').on('change', function () {
+  const icon = $(this).data('icon');
+  pinVisibility[icon] = $(this).prop('checked');
+  localStorage.setItem('pinVisibility', JSON.stringify(pinVisibility));
+  console.log('Pin visibility toggled:', { icon, visible: pinVisibility[icon] });
   refreshMap();
+  updateCounts();
+  updateSealCounts();
 });
 
-$('#filterPupils').on('change', function () {
-  filters.pupils = $(this).prop('checked');
-  console.log('Filter pupils changed:', filters.pupils);
-  refreshMap();
+// 初期チェックボックス状態を設定
+Object.keys(pinVisibility).forEach(icon => {
+  $(`.pin-visibility[data-icon="${icon}"]`).prop('checked', pinVisibility[icon]);
 });
 
 // 取得済み状態の切り替え
@@ -218,63 +244,15 @@ function toggleObtained(index) {
   }
 }
 
-// 線を結ぶ
-function connectLine(index) {
-  console.log('connectLine called:', { index });
-  try {
-    if (connectingPinIndex === null) {
-      connectingPinIndex = index;
-      console.log('First pin selected for connection:', index);
-      // alert('次に接続するピンを選択してください。');
-    } else {
-      if (connectingPinIndex === index) {
-        console.warn('Cannot connect a pin to itself');
-        alert('同じピンを選択できません。別のピンを選んでください。');
-        return;
-      }
-      const pin1 = pins[connectingPinIndex];
-      const pin2 = pins[index];
-      if (!pin1 || !pin2) {
-        console.error('Invalid pin indices:', { pin1: connectingPinIndex, pin2: index });
-        alert('ピンのデータが見つかりません。');
-        connectingPinIndex = null;
-        return;
-      }
-      if (pin1.area !== pin2.area || pin1.subArea !== pin2.subArea) {
-        console.warn('Cannot connect pins from different areas:', { pin1, pin2 });
-        alert('異なるエリアのピンは接続できません。');
-        connectingPinIndex = null;
-        return;
-      }
-      lines.push({
-        pin1: connectingPinIndex,
-        pin2: index,
-        area: pin1.area,
-        subArea: pin1.subArea
-      });
-      localStorage.setItem('lines', JSON.stringify(lines));
-      refreshMap();
-      console.log('Line connected:', { pin1: connectingPinIndex, pin2: index });
-      connectingPinIndex = null;
-    }
-  } catch (err) {
-    console.error('Error connecting line:', err);
-    alert('線の接続に失敗しました。コンソールを確認してください。');
-    connectingPinIndex = null;
-  }
-}
-
 // ピンのマップ表示
 function addPinToMap(pin, index) {
-  if (pin.area !== currentArea || (pin.subArea && pin.subArea !== currentSubArea) || (!pin.subArea && currentSubArea)) {
-    console.log('Skipping pin due to area mismatch:', pin);
-    return;
-  }
-  // 表示フィルターチェック
-  const isNormalChest = pin.icon === '普通の宝箱';
-  const isPupil = ['風神瞳', '岩神瞳', '雷神瞳', '草神瞳', '水神瞳', '炎神瞳'].includes(pin.icon);
-  if ((isNormalChest && !filters.normalChest) || (isPupil && !filters.pupils)) {
-    console.log('Skipping pin due to filter:', pin);
+  if (
+    pin.area !== currentArea ||
+    (pin.subArea && pin.subArea !== currentSubArea) ||
+    (!pin.subArea && currentSubArea) ||
+    !pinVisibility[pin.icon] // 表示状態をチェック
+  ) {
+    console.log('Skipping pin:', pin);
     return;
   }
   console.log('Adding pin:', pin);
@@ -284,16 +262,33 @@ function addPinToMap(pin, index) {
     return;
   }
 
-  // ピンのアイコン（背景なし、取得状態に応じてカラー/グレー）
-  const marker = L.marker([pin.lat, pin.lng], {
-    icon: L.icon({
+  // ピンのアイコン（合成または通常）
+  let markerIcon;
+  if (pin.image) {
+    // 合成アイコン（ピン＋画像）
+    markerIcon = L.divIcon({
+      html: `
+        <div class="composite-icon ${pin.obtained ? '' : 'grayscale'}" style="background-image: url('${icon.url}')">
+          <img src="${pin.image}" onerror="this.style.display='none'">
+        </div>
+      `,
+      iconSize: [48, 48],
+      iconAnchor: [24, 24],
+      popupAnchor: [0, -24],
+      className: 'composite-icon'
+    });
+  } else {
+    // 通常アイコン
+    markerIcon = L.icon({
       iconUrl: icon.url,
       iconSize: icon.size,
       iconAnchor: icon.anchor,
       popupAnchor: [0, -icon.anchor[1]],
-      className: pin.obtained ? '' : 'grayscale' // 取得済み: カラー, 未取得: グレー
-    })
-  })
+      className: pin.obtained ? '' : 'grayscale'
+    });
+  }
+
+  const marker = L.marker([pin.lat, pin.lng], { icon: markerIcon })
     .addTo(map)
     .bindPopup(`
       <strong>${pin.icon}${getFlagText(pin)}</strong><br>
@@ -301,10 +296,9 @@ function addPinToMap(pin, index) {
       ${pin.note ? `<p>備考: ${pin.note}</p>` : ''}
       ${pin.image ? `<img src="${pin.image}" style="max-width: 200px;">` : ''}
       ${pin.video ? `<iframe width="200" height="150" src="${pin.video.replace('watch?v=', 'embed/')}"></iframe>` : ''}
-      <div class="mt-2 d-flex align-items-center gap-2 flex-wrap">
+      <div class="mt-2 d-flex align-items-center gap-2">
         <button class="btn btn-sm btn-primary" onclick="editPin(${index})">編集</button>
         <button class="btn btn-sm btn-danger" onclick="deletePin(${index})">削除</button>
-        <button class="btn btn-sm btn-success" onclick="connectLine(${index})">線を結ぶ</button>
         <div class="form-check form-check-inline">
           <input class="form-check-input obtained-checkbox" type="checkbox" id="obtained-${index}" ${pin.obtained ? 'checked' : ''} onchange="toggleObtained(${index})">
           <label class="form-check-label" for="obtained-${index}">取得済み</label>
@@ -316,25 +310,27 @@ function addPinToMap(pin, index) {
       const img = new Image();
       img.src = icon.url;
       img.onerror = () => console.error(`Failed to load pin icon: ${icon.url}`);
+      if (pin.image) {
+        const overlayImg = new Image();
+        overlayImg.src = pin.image;
+        overlayImg.onerror = () => console.error(`Failed to load overlay image: ${pin.image}`);
+      }
     });
 
   // バッジの表示（ピンの下）
   let badges = '';
-  if (pin.lowRoad) badges += '<span class="pin-badge badge-lowRoad">L</span>';
   if (pin.underground) badges += '<span class="pin-badge badge-underground">U</span>';
   if (pin.seelie) badges += '<span class="pin-badge badge-seelie">S</span>';
   if (pin.electroSeelie) badges += '<span class="pin-badge badge-electroSeelie">E</span>';
   if (pin.challenge) badges += '<span class="pin-badge badge-challenge">C</span>';
-  if (pin.gimmick) badges += '<span class="pin-badge badge-gimmick">G</span>';
 
   if (badges) {
     console.log('Badges:', badges);
-    // バッジをピンの下に配置（オフセット5px）
     L.marker([pin.lat, pin.lng], {
       icon: L.divIcon({
         html: `<div style="text-align: center;">${badges}</div>`,
-        iconSize: [badges.length * 14, 12], // バッジ数に応じた幅
-        iconAnchor: [badges.length * 7, -5], // ピンの下（5px上）
+        iconSize: [badges.length * 14, 12],
+        iconAnchor: [badges.length * 7, -5],
         className: 'badge-container'
       })
     }).addTo(map);
@@ -342,51 +338,13 @@ function addPinToMap(pin, index) {
   }
 }
 
-// 線のマップ表示
-function addLineToMap(line) {
-  if (line.area !== currentArea || (line.subArea && line.subArea !== currentSubArea) || (!line.subArea && currentSubArea)) {
-    console.log('Skipping line due to area mismatch:', line);
-    return;
-  }
-  const pin1 = pins[line.pin1];
-  const pin2 = pins[line.pin2];
-  if (!pin1 || !pin2) {
-    console.warn('Invalid pins for line:', line);
-    return;
-  }
-  // 表示フィルターチェック
-  const isNormalChest1 = pin1.icon === '普通の宝箱';
-  const isPupil1 = ['風神瞳', '岩神瞳', '雷神瞳', '草神瞳', '水神瞳', '炎神瞳'].includes(pin1.icon);
-  const isNormalChest2 = pin2.icon === '普通の宝箱';
-  const isPupil2 = ['風神瞳', '岩神瞳', '雷神瞳', '草神瞳', '水神瞳', '炎神瞳'].includes(pin2.icon);
-  if (
-    (isNormalChest1 && !filters.normalChest) || (isPupil1 && !filters.pupils) ||
-    (isNormalChest2 && !filters.normalChest) || (isPupil2 && !filters.pupils)
-  ) {
-    console.log('Skipping line due to filter:', line);
-    return;
-  }
-  console.log('Adding line:', line);
-  L.polyline([
-    [pin1.lat, pin1.lng],
-    [pin2.lat, pin2.lng]
-  ], {
-    color: '#ff0000',
-    weight: 2,
-    opacity: 0.8
-  }).addTo(map);
-  console.log('Line added to map');
-}
-
 // フラグテキストの生成
 function getFlagText(pin) {
   const flags = [];
-  if (pin.lowRoad) flags.push('下道');
   if (pin.underground) flags.push('地下');
   if (pin.seelie) flags.push('仙霊');
   if (pin.electroSeelie) flags.push('雷霊');
   if (pin.challenge) flags.push('チャレンジ');
-  if (pin.gimmick) flags.push('ギミック');
   return flags.length ? ` (${flags.join(', ')})` : '';
 }
 
@@ -397,12 +355,10 @@ function openPinModal(e) {
   editingIndex = null;
   $('#pinForm')[0].reset();
   $('#pinIcon').val('');
-  $('#lowRoad').prop('checked', false);
   $('#underground').prop('checked', false);
   $('#seelie').prop('checked', false);
   $('#electroSeelie').prop('checked', false);
   $('#challenge').prop('checked', false);
-  $('#gimmick').prop('checked', false);
   $('#obtained').prop('checked', false); // 新規ピンは未取得
   $('#imagePreview').hide();
   $('#videoPreview').hide();
@@ -446,12 +402,10 @@ function savePin() {
     lng: window.tempCoords.lng,
     area: currentArea,
     subArea: currentSubArea,
-    lowRoad: $('#lowRoad').prop('checked'),
     underground: $('#underground').prop('checked'),
     seelie: $('#seelie').prop('checked'),
     electroSeelie: $('#electroSeelie').prop('checked'),
     challenge: $('#challenge').prop('checked'),
-    gimmick: $('#gimmick').prop('checked'),
     obtained: $('#obtained').prop('checked') // 取得済み状態
   };
   console.log('Saving pin:', pin);
@@ -495,12 +449,10 @@ function editPin(index) {
   $('#pinNote').val(pin.note);
   $('#pinImage').val(pin.image);
   $('#pinVideo').val(pin.video);
-  $('#lowRoad').prop('checked', pin.lowRoad || false);
   $('#underground').prop('checked', pin.underground || false);
   $('#seelie').prop('checked', pin.seelie || false);
   $('#electroSeelie').prop('checked', pin.electroSeelie || false);
   $('#challenge').prop('checked', pin.challenge || false);
-  $('#gimmick').prop('checked', pin.gimmick || false);
   $('#obtained').prop('checked', pin.obtained || false); // 取得状態を反映
   $('.icon-option').removeClass('selected');
   $(`.icon-option[data-icon="${pin.icon}"]`).addClass('selected');
@@ -518,18 +470,8 @@ function editPin(index) {
 function deletePin(index) {
   console.log('Deleting pin:', index);
   try {
-    // 関連する線を削除
-    lines = lines.filter(line => line.pin1 !== index && line.pin2 !== index);
-    localStorage.setItem('lines', JSON.stringify(lines));
     pins.splice(index, 1);
-    // 線のインデックスを調整
-    lines = lines.map(line => ({
-      ...line,
-      pin1: line.pin1 > index ? line.pin1 - 1 : line.pin1,
-      pin2: line.pin2 > index ? line.pin2 - 1 : line.pin2
-    }));
     localStorage.setItem('pins', JSON.stringify(pins));
-    localStorage.setItem('lines', JSON.stringify(lines));
     refreshMap();
     updateCounts();
     updateSealCounts();
@@ -542,25 +484,21 @@ function deletePin(index) {
 // マップのリフレッシュ
 function refreshMap() {
   console.log('refreshMap called');
-  // マーカー、バッジ、線をクリア（マップ画像は保持）
+  // マーカーとバッジのみクリア（マップ画像は保持）
   map.eachLayer(layer => {
-    if (layer instanceof L.Marker || layer instanceof L.Polyline) {
+    if (layer instanceof L.Marker) {
       map.removeLayer(layer);
-      console.log('Removed layer:', layer);
+      console.log('Removed marker layer:', layer);
     }
   });
   // ピンを再描画
   pins.forEach((pin, index) => {
     addPinToMap(pin, index);
   });
-  // 線を再描画
-  lines.forEach(line => {
-    addLineToMap(line);
-  });
-  console.log('Map refreshed, pins added:', pins.length, 'lines added:', lines.length);
+  console.log('Map refreshed, pins added:', pins.length);
 }
 
-// ピンのカウント更新（取得済みのみ）
+// ピンのカウント更新（取得済みかつ表示中のピンのみ）
 function updateCounts() {
   console.log('updateCounts called');
   const counts = {
@@ -595,7 +533,8 @@ function updateCounts() {
     if (
       pin.area === currentArea &&
       (!pin.subArea && !currentSubArea || pin.subArea === currentSubArea) &&
-      pin.obtained === true // 取得済みのみカウント
+      pin.obtained === true &&
+      pinVisibility[pin.icon] // 表示中のピンのみ
     ) {
       if (counts[pin.icon] !== undefined) counts[pin.icon]++;
     }
@@ -629,7 +568,7 @@ function updateCounts() {
   console.log('Counts updated:', counts);
 }
 
-// 印のカウント更新（取得済みの宝箱のみ）
+// 印のカウント更新（取得済みかつ表示中の宝箱のみ）
 function updateSealCounts() {
   console.log('updateSealCounts called');
   const seals = {
@@ -641,7 +580,11 @@ function updateSealCounts() {
     natlan: 0
   };
   pins.forEach(pin => {
-    if (chestSeals[pin.icon] !== undefined && pin.obtained === true) {
+    if (
+      chestSeals[pin.icon] !== undefined &&
+      pin.obtained === true &&
+      pinVisibility[pin.icon] // 表示中の宝箱のみ
+    ) {
       seals[pin.area] += chestSeals[pin.icon];
     }
   });
@@ -680,18 +623,17 @@ function updatePreviews() {
 $('#exportPins').on('click', function () {
   console.log('Export pins called');
   try {
-    const data = { pins, lines };
-    const dataStr = JSON.stringify(data, null, 2);
+    const dataStr = JSON.stringify(pins, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = 'map_data.json';
+    link.download = 'pins.json';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    console.log('Pins and lines exported successfully');
+    console.log('Pins exported successfully');
   } catch (err) {
     console.error('Error exporting pins:', err);
   }
@@ -713,24 +655,18 @@ $('#importTrigger').on('click', function () {
   const reader = new FileReader();
   reader.onload = function (e) {
     try {
-      const importedData = JSON.parse(e.target.result);
-      if (!Array.isArray(importedData.pins)) {
-        console.warn('Imported pins data is not an array');
+      const importedPins = JSON.parse(e.target.result);
+      if (!Array.isArray(importedPins)) {
+        console.warn('Imported data is not an array');
         return;
       }
-      if (!Array.isArray(importedData.lines)) {
-        console.warn('Imported lines data is not an array');
-        importedData.lines = [];
-      }
-      pins = importedData.pins;
-      lines = importedData.lines;
+      pins = importedPins;
       localStorage.setItem('pins', JSON.stringify(pins));
-      localStorage.setItem('lines', JSON.stringify(lines));
       refreshMap();
       updateCounts();
       updateSealCounts();
       fileInput.value = ''; // 入力リセット
-      console.log('Pins and lines imported successfully:', pins.length, lines.length);
+      console.log('Pins imported successfully:', pins.length);
     } catch (err) {
       console.error('Error importing pins:', err);
     }
@@ -741,9 +677,8 @@ $('#importTrigger').on('click', function () {
   reader.readAsText(file);
 });
 
-// 初期ピンと線の読み込み
+// 初期ピンの読み込み
 pins.forEach((pin, index) => addPinToMap(pin, index));
-lines.forEach(line => addLineToMap(line));
 
 // 初期カウント
 updateCounts();
