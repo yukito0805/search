@@ -35,6 +35,11 @@ body {
   border-radius: 5px;
 }
 
+/* 表示フィルターコンテナ */
+.filter-container {
+  padding: 10px 0;
+}
+
 /* 印コンテナ */
 .seal-container {
   display: flex;
@@ -101,6 +106,9 @@ body {
   border-radius: 2px;
   margin-right: 2px;
 }
+.badge-lowRoad {
+  background-color: #ffa500; /* オレンジ */
+}
 .badge-underground {
   background-color: #ff0000; /* 赤 */
 }
@@ -112,6 +120,9 @@ body {
 }
 .badge-challenge {
   background-color: #28a745; /* 緑 */
+}
+.badge-gimmick {
+  background-color: #ff69b4; /* ピンク */
 }
 
 /* ズームコントロール */
@@ -141,6 +152,13 @@ body {
 /* グレースケールアイコン */
 .leaflet-marker-icon.grayscale {
   filter: grayscale(100%);
+}
+
+/* 線のスタイル */
+.leaflet-polyline {
+  stroke: #ff0000; /* 赤 */
+  stroke-width: 2;
+  stroke-opacity: 0.8;
 }
 
 /* モバイル対応（iPad含む） */
