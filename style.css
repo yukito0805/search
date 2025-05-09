@@ -6,7 +6,7 @@ body {
 
 /* マップ */
 #map {
-  height: 90vh;
+  height: 60vh;
   width: 100%;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -33,11 +33,14 @@ body {
   text-align: center;
   background-color: #f1f1f1;
   border-radius: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-/* 表示フィルターコンテナ */
-.filter-container {
-  padding: 10px 0;
+/* ピンの表示/非表示チェックボックス */
+.pin-visibility {
+  margin: 0;
 }
 
 /* 印コンテナ */
@@ -106,9 +109,6 @@ body {
   border-radius: 2px;
   margin-right: 2px;
 }
-.badge-lowRoad {
-  background-color: #ffa500; /* オレンジ */
-}
 .badge-underground {
   background-color: #ff0000; /* 赤 */
 }
@@ -121,8 +121,28 @@ body {
 .badge-challenge {
   background-color: #28a745; /* 緑 */
 }
-.badge-gimmick {
-  background-color: #ff69b4; /* ピンク */
+
+/* 合成ピンのスタイル */
+.composite-icon {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  background-size: cover;
+  background-position: center;
+}
+.composite-icon img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border: 1px solid #fff;
+  border-radius: 2px;
+}
+.composite-icon.grayscale {
+  filter: grayscale(100%);
 }
 
 /* ズームコントロール */
@@ -152,13 +172,6 @@ body {
 /* グレースケールアイコン */
 .leaflet-marker-icon.grayscale {
   filter: grayscale(100%);
-}
-
-/* 線のスタイル */
-.leaflet-polyline {
-  stroke: #ff0000; /* 赤 */
-  stroke-width: 2;
-  stroke-opacity: 0.8;
 }
 
 /* モバイル対応（iPad含む） */
