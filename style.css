@@ -6,7 +6,7 @@ body {
 
 /* マップ */
 #map {
-  height: 60vh;
+  height: 100vh;
   width: 100%;
   border: 1px solid #ccc;
   border-radius: 5px;
