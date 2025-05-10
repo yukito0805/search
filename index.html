@@ -51,113 +51,97 @@
     <!-- マップ -->
     <div id="map"></div>
 
+    <!-- ピンの表示/非表示コントロール -->
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5>ピンの表示/非表示</h5>
+        <div id="iconVisibilityControls" class="d-flex flex-wrap gap-2">
+          <!-- JavaScriptで動的に追加 -->
+        </div>
+      </div>
+    </div>
+
     <!-- カウント表示 -->
     <div class="card mb-3">
       <div class="card-body">
         <h5>ピンの総数</h5>
         <div class="count-container">
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="風神瞳" checked>
             風神瞳: <span id="countHujin">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="岩神瞳" checked>
             岩神瞳: <span id="countIwagami">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="雷神瞳" checked>
             雷神瞳: <span id="countRaijin">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="草神瞳" checked>
             草神瞳: <span id="countSoushin">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="水神瞳" checked>
             水神瞳: <span id="countSuijin">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="炎神瞳" checked>
             炎神瞳: <span id="countEnshin">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="チャレンジ" checked>
             チャレンジ: <span id="countChallenge">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="仙霊" checked>
             仙霊: <span id="countSenrei">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="元素石碑" checked>
             元素石碑: <span id="countSekihi">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="立方体" checked>
             立方体: <span id="countSquare">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="鍵紋1" checked>
             鍵紋1: <span id="countKey1">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="鍵紋2" checked>
             鍵紋2: <span id="countKey2">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="鍵紋3" checked>
             鍵紋3: <span id="countKey3">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="鍵紋4" checked>
             鍵紋4: <span id="countKey4">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="鍵紋5" checked>
             鍵紋5: <span id="countKey5">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="雷霊" checked>
             雷霊: <span id="countElectroSeelie">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="アランナラ" checked>
             アランナラ: <span id="countArannara">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="スメールギミック" checked>
             Sギミック: <span id="countSGimmick">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="リーフコア" checked>
             リーフコア: <span id="countLeaf">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="短火装置" checked>
             短火装置: <span id="countDai">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="死域" checked>
             死域: <span id="countShiki">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="普通の宝箱" checked>
             普通の宝箱: <span id="countHutu">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="精巧な宝箱" checked>
             精巧な宝箱: <span id="countSeikou">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="貴重な宝箱" checked>
             貴重な宝箱: <span id="countKityo">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="豪華な宝箱" checked>
             豪華な宝箱: <span id="countGouka">0</span>
           </div>
           <div class="count-item">
-            <input type="checkbox" class="pin-visibility" data-icon="珍奇な宝箱" checked>
             珍奇な宝箱: <span id="countTinki">0</span>
           </div>
         </div>
@@ -232,6 +216,10 @@
               <label class="form-label">属性</label>
               <div class="d-flex flex-wrap gap-3">
                 <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="downway">
+                  <label class="form-check-label" for="downway">下道</label>
+                </div>
+                <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="underground">
                   <label class="form-check-label" for="underground">地下</label>
                 </div>
@@ -246,6 +234,10 @@
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="challenge">
                   <label class="form-check-label" for="challenge">チャレンジ</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="gimmick">
+                  <label class="form-check-label" for="gimmick">ギミック</label>
                 </div>
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="obtained">
