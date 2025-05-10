@@ -17,13 +17,28 @@ body {
   max-width: 100%;
 }
 
+/* ピンの表示/非表示コントロール */
+#iconVisibilityControls {
+  max-height: 200px;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 5px;
+}
+#iconVisibilityControls .form-check {
+  margin: 0;
+}
+#iconVisibilityControls .form-check-label {
+  font-size: 0.85rem;
+}
+
 /* カウントコンテナ */
 .count-container {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  max-height: 200px; /* スクロール対応 */
-  overflow-y: auto; /* 縦スクロール */
+  max-height: 200px;
+  overflow-y: auto;
 }
 
 /* カウント項目 */
@@ -33,14 +48,6 @@ body {
   text-align: center;
   background-color: #f1f1f1;
   border-radius: 5px;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-/* ピンの表示/非表示チェックボックス */
-.pin-visibility {
-  margin: 0;
 }
 
 /* 印コンテナ */
@@ -61,7 +68,7 @@ body {
 
 /* 現在選択中のエリアの強調 */
 .seal-item.active {
-  background-color: #e0e7ff; /* 薄い青 */
+  background-color: #e0e7ff;
   font-weight: bold;
 }
 
@@ -109,6 +116,9 @@ body {
   border-radius: 2px;
   margin-right: 2px;
 }
+.badge-downway {
+  background-color: #007bff; /* 青 */
+}
 .badge-underground {
   background-color: #ff0000; /* 赤 */
 }
@@ -121,28 +131,14 @@ body {
 .badge-challenge {
   background-color: #28a745; /* 緑 */
 }
+.badge-gimmick {
+  background-color: #fd7e14; /* 橙 */
+}
 
-/* 合成ピンのスタイル */
-.composite-icon {
-  position: relative;
-  width: 48px;
-  height: 48px;
-  background-size: cover;
-  background-position: center;
-}
-.composite-icon img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 32px;
-  height: 32px;
-  object-fit: cover;
-  border: 1px solid #fff;
-  border-radius: 2px;
-}
-.composite-icon.grayscale {
-  filter: grayscale(100%);
+/* 線のスタイル */
+.leaflet-overlay-pane .connection-line {
+  stroke: #ff0000;
+  stroke-width: 2px;
 }
 
 /* ズームコントロール */
@@ -166,7 +162,7 @@ body {
 /* ピンのアイコン */
 .leaflet-marker-icon {
   cursor: pointer;
-  background: none !important; /* 背景を透明に */
+  background: none !important;
 }
 
 /* グレースケールアイコン */
@@ -187,6 +183,9 @@ body {
   }
   .count-item, .seal-item {
     width: calc(33.33% - 10px);
+  }
+  #iconVisibilityControls {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   }
   .form-check {
     margin-right: 10px;
