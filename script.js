@@ -72,7 +72,7 @@ const pinIcons = {
   '雷霊': { url: 'images/rairei.png', size: [48, 48], anchor: [24, 24] },
   'アランナラ': { url: 'images/arannara.png', size: [48, 48], anchor: [24, 24] },
   'スメールギミック': { url: 'images/SGimmick.png', size: [48, 48], anchor: [24, 24] },
-  'リーフコア': { url: 'images/leaf.png', size: [48, 48], anchor: [24, 24] },
+  '幻写霊': { url: 'images/leaf.png', size: [48, 48], anchor: [24, 24] },
   '短火装置': { url: 'images/dai.png', size: [48, 48], anchor: [24, 24] },
   '死域': { url: 'images/shiki.png', size: [48, 48], anchor: [24, 24] },
   '普通の宝箱': { url: 'images/hutu.png', size: [48, 48], anchor: [24, 24] },
@@ -546,7 +546,7 @@ function updateCounts() {
     '雷霊': 0,
     'アランナラ': 0,
     'スメールギミック': 0,
-    'リーフコア': 0,
+    '幻写霊': 0,
     '短火装置': 0,
     '死域': 0,
     '普通の宝箱': 0,
@@ -582,7 +582,7 @@ function updateCounts() {
   document.getElementById('countElectroSeelie').textContent = counts['雷霊'];
   document.getElementById('countArannara').textContent = counts['アランナラ'];
   document.getElementById('countSGimmick').textContent = counts['スメールギミック'];
-  document.getElementById('countLeaf').textContent = counts['リーフコア'];
+  document.getElementById('countLeaf').textContent = counts['幻写霊'];
   document.getElementById('countDai').textContent = counts['短火装置'];
   document.getElementById('countShiki').textContent = counts['死域'];
   document.getElementById('countHutu').textContent = counts['普通の宝箱'];
